@@ -5,16 +5,18 @@
  
 #define ONE_WIRE_BUS D2
 #define FAN_PORT D0
+#define FAN_SPEED_PORT D1
+const int FAN_SPEED = 30;
 
 const char* ssid = "<SSID>";
-const char* password = "<SSID_PWD>";
+const char* password = "<WIFI_PWD>";
 
 const char *INFLUXDB_HOST = "<INFLUX_HOST>";
-const uint16_t INFLUXDB_PORT = <INFLUX_PORT>;
+const uint16_t INFLUXDB_PORT = 8086;
 
-const char *DATABASE = "<INFLUX_DB>";
-const char *DB_USER = "<INFLUX_USR>";
-const char *DB_PASSWORD = "<INFLUX_PWD>";
+const char *DATABASE = "<DATBASE_NAME>";
+const char *DB_USER = "<USERNAME>";
+const char *DB_PASSWORD = "<DB_PWD>";
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature DS18B20(&oneWire);
@@ -34,7 +36,13 @@ void setup(void){
   
   DS18B20.begin();
   pinMode(FAN_PORT, OUTPUT);
-
+  
+  // to have a range 1 - 100 for the fan
+  analogWriteRange(100); 
+  // set PWM frequency to 25kHz
+  analogWriteFreq(25000);
+  // set the fan to a speed of 30%
+  analogWrite(FAN_SPEED_PORT, FAN_SPEED);
 }
 
 void setup_wifi() {
@@ -77,8 +85,9 @@ void loop() {
   String data;
   Serial.println(temperatureString);
   if (temperature > 28.00) {
-    Serial.println("temperature to high, lets start the fan");
+    Serial.println("temperature too high, lets start the fan");
     digitalWrite(FAN_PORT, HIGH);
+    analogWrite(FAN_SPEED_PORT, FAN_SPEED);
     data = "fancontrol,room=woonkamer,location=back-window enabled=1";
   } else {
     Serial.println("temperature decreased enough, lets stop the fan");
